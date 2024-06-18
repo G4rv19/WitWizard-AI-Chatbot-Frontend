@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WitWizard</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: url('https://i.imgur.com/L4q4fSw.gif') repeat center/cover;
+        background-size: cover;
+        overflow: hidden;
+    }
+
+    .container {
+        position: relative;
+        margin-bottom: 10%;
+        margin-top: 8%;
+        max-width: 70%;
+        width: 100%;
+        max-height: 80%;
+        height: 100%;
+        padding: 20px;
+        border: 1px solid #fff;
+        border-top: 5% solid rgba(255, 255, 255, 0.5);
+        border-radius: 10px;
+        background-color: rgba(0, 0, 0, 0.4);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    #Models {
+        width: 60%; /* Custom width */
+        height: 60%; /* Custom height */
+        border-radius: 10px; /* Rounded corners */
+        background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent black background */
+        backdrop-filter: blur(5px); /* Blur effect */
+        border: none; /* Remove default border */
+        outline: none; /* Remove default focus outline */
+        color: white; /* Text color for better readability */
+        padding: 10px 15px; /* Padding inside the select box */
+    }
+    
+    /* Custom styles for options */
+    #Models option {
+        background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+        color: white; /* Text color for better readability */
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #4E4FEB;
+    }
+
+    .message-container {
+        margin-bottom: 20px;
+        overflow-y: auto;
+        flex-grow: 1;
+        max-height: calc(100% - 160px);
+        padding: 10px;
+        color: #fff;
+    }
+
+    .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 15px;
+        font-size: 16px;
+    }
+
+    .user-message {
+        background-color: #068FFF;
+        text-align: right;
+        color: #fff;
+    }
+
+    .bot-message {
+        background-color: #EEEEEE;
+        text-align: left;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+        overflow: auto;
+        color: #000;
+    }
+
+    .typing-indicator {
+        font-style: italic;
+        color: #aaa;
+        margin-bottom: 10px;
+    }
+
+    .input-container {
+        display: flex;
+        margin-top: auto;
+    }
+
+    .input-container textarea {
+        flex-grow: 1;
+        padding: 8px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        resize: none;
+    }
+
+    .input-container button {
+        padding: 8px 16px;
+        border: none;
+        background-color: #4E4FEB;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 35px;
+    }
+
+    .bold {
+        font-size: 20px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>WitWizard</h1>
+        <div class="Model-Selection">
+            <select name="Models" id="Models">
+                <option value="openchat:7b">WitWizard~🪄🧙🏻‍♂️</option>
+                <option value="wizard-math:latest">Mathemagician 🧙‍♀️</option>
+            </select>
+        </div>
+    </div>
+    <div class="message-container" id="message-container">
+        <!-- Chat messages will be displayed here -->
+    </div>
+    <div class="input-container">
+        <textarea id="message-input" placeholder="Type your message..." rows="2"></textarea>
+        <button id="send-button">Send</button>
+    </div>
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="G4rv" data-description="Support me on Buy me a coffee!" data-message="Hope you enjoyed with WitWizard!" data-color="#FF5F5F" data-position="Right" data-x_margin="18" data-y_margin="18"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var messageContainer = document.getElementById('message-container');
+            var messageInput = document.getElementById('message-input');
+            var sendButton = document.getElementById('send-button');
+            var container = document.querySelector('.container');
+            var modelsDropdown = document.getElementById('Models');
+            var selectedModel = modelsDropdown.value;
+
+            function saveModel(model) {
+                console.log('Attempting to save model:', model);
+                fetch('http://localhost:6969/save-model', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ model: model })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Model saved successfully:', data);
+                })
+                .catch(error => {
+                    console.error('Error saving model:', error);
+                });
+            }
+
+            function handleModelChange() {
+                selectedModel = this.value;
+                console.log('Model selected:', selectedModel);
+                saveModel(selectedModel);
+            }
+
+            modelsDropdown.addEventListener('change', handleModelChange);
+            modelsDropdown.addEventListener('touchend', handleModelChange);
+
+            messageInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            sendButton.addEventListener('click', function() {
+                sendMessage();
+            });
+
+            function sendMessage() {
+                var message = messageInput.value;
+                if (message !== '') {
+                    var userMessageElement = document.createElement('div');
+                    userMessageElement.classList.add('message', 'user-message');
+                    userMessageElement.textContent = message;
+                    messageContainer.appendChild(userMessageElement);
+                    messageInput.value = '';
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+
+                    // Add typing indicator
+                    var typingIndicator = document.createElement('div');
+                    typingIndicator.classList.add('message', 'typing-indicator');
+                    typingIndicator.setAttribute('id', 'typing-indicator');
+                    typingIndicator.textContent = 'WitWizard is typing...';
+                    messageContainer.appendChild(typingIndicator);
+
+                    // Add animation class
+                    container.classList.add('animate-border');
+
+                    fetch('/backend', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message: message, model: selectedModel })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Remove typing indicator
+                        var typingIndicator = document.getElementById('typing-indicator');
+                        if (typingIndicator) {
+                            messageContainer.removeChild(typingIndicator);
+                        }
+
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            container.classList.remove('animate-border');
+                        }, 2000);
+
+                        messageInput.disabled = false;
+                        sendButton.disabled = false;
+
+                        var botMessageElement = document.createElement('pre');
+                        botMessageElement.classList.add('message', 'bot-message');
+                        var botMessage = data.message.replace(/\*\*|```/g, '');
+                        botMessageElement.innerText = botMessage;
+                        messageContainer.appendChild(botMessageElement);
+                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        var errorMessageElement = document.createElement('div');
+                        errorMessageElement.classList.add('message', 'error-message');
+                        errorMessageElement.textContent = error.message;
+                        messageContainer.appendChild(errorMessageElement);
+
+                        // Remove typing indicator in case of error
+                        var typingIndicator = document.getElementById('typing-indicator');
+                        if (typingIndicator) {
+                            messageContainer.removeChild(typingIndicator);
+                        }
+                        messageInput.disabled = false;
+                        sendButton.disabled = false;
+
+                        // Remove animation class after animation completes
+                        setTimeout(() => {
+                            container.classList.remove('animate-border');
+                        }, 2000);
+                    });
+                }
+            }
+
+            // Initial call to ensure the model is saved on page load
+            saveModel(selectedModel);
+        });
+    </script>
+</div>
+</body>
+</html>
